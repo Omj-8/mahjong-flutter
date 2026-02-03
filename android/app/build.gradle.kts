@@ -5,6 +5,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+<<<<<<< HEAD
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
@@ -13,6 +14,10 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.kusak.mahjong_calculator"
+=======
+android {
+    namespace = "com.example.flutter_application_1"
+>>>>>>> a12077725ceb57e83e7c3aed5f68f40d92a9fe40
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -26,8 +31,13 @@ android {
     }
 
     defaultConfig {
+<<<<<<< HEAD
         // Unique Application ID for mahjong calculator app
         applicationId = "com.kusak.mahjong_calculator"
+=======
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId = "com.example.flutter_application_1"
+>>>>>>> a12077725ceb57e83e7c3aed5f68f40d92a9fe40
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -36,6 +46,7 @@ android {
         versionName = flutter.versionName
     }
 
+<<<<<<< HEAD
     signingConfigs {
         release {
             keyAlias keystoreProperties['keyAlias']
@@ -48,6 +59,13 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+=======
+    buildTypes {
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig = signingConfigs.getByName("debug")
+>>>>>>> a12077725ceb57e83e7c3aed5f68f40d92a9fe40
         }
     }
 }
