@@ -17,8 +17,8 @@
 #### 2. Android用パッケージ設定の変更
 - **ファイル**: `android/app/build.gradle.kts`
 - **変更内容**:
-  - `namespace`: `com.example.flutter_application_1` → `com.kusak.mahjong_calculator`
-  - `applicationId`: `com.example.flutter_application_1` → `com.kusak.mahjong_calculator`
+  - `namespace`: `com.example.flutter_application_1` → `com.omj8.mahjong_calculator`
+  - `applicationId`: `com.example.flutter_application_1` → `com.omj8.mahjong_calculator`
   - Google Play Storeで一意となるパッケージ名に変更
 
 #### 3. リリース用署名設定の追加

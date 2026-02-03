@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.kusak.mahjong_calculator"
+    namespace = "com.omj8.mahjong_calculator"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         // Unique Application ID for mahjong calculator app
-        applicationId = "com.kusak.mahjong_calculator"
+        applicationId = "com.omj8.mahjong_calculator"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
