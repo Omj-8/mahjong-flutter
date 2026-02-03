@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 name: mahjong_uma_oka_calculator
 description: "麻雀ウマオカ計算アプリ - カスタムポイント計算システムを搭載した、麻雀ゲームの清算・累計管理アプリです。"
-=======
-name: flutter_application_1
-description: "A new Flutter project."
->>>>>>> a12077725ceb57e83e7c3aed5f68f40d92a9fe40
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

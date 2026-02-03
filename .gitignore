@@ -43,7 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-<<<<<<< HEAD
 
 # 署名キーと機密情報（絶対にGitHubに上げない）
 android/key.properties
@@ -52,8 +51,6 @@ android/*.keystore
 *.jks
 *.keystore
 
-=======
->>>>>>> a12077725ceb57e83e7c3aed5f68f40d92a9fe40
 # Local build properties (contains personal SDK paths)
 android/local.properties
 ios/Pods/
