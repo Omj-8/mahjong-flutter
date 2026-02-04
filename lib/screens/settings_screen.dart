@@ -22,7 +22,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController bonus2ndController;
   late TextEditingController bonus3rdController;
   late TextEditingController bonus4thController;
+  late TextEditingController tobiPenaltyController;
+  late TextEditingController tobiRewardController;
   late bool usePointSystem;
+  late bool useTobiRule;
 
   @override
   void initState() {
@@ -48,7 +51,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bonus4thController = TextEditingController(
       text: widget.initialSettings.bonus4th.toString(),
     );
+    tobiPenaltyController = TextEditingController(
+      text: widget.initialSettings.tobiPenalty.toString(),
+    );
+    tobiRewardController = TextEditingController(
+      text: widget.initialSettings.tobiReward.toString(),
+    );
     usePointSystem = widget.initialSettings.usePointSystem;
+    useTobiRule = widget.initialSettings.useTobiRule;
   }
 
   @override
@@ -60,6 +70,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bonus2ndController.dispose();
     bonus3rdController.dispose();
     bonus4thController.dispose();
+    tobiPenaltyController.dispose();
+    tobiRewardController.dispose();
     super.dispose();
   }
 
@@ -130,6 +142,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildBonusInputField('4位のボーナス', bonus4thController),
               const SizedBox(height: 16),
               _buildBonusSummary(),
+              const SizedBox(height: 32),
+              const Text(
+                '飛びルール',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '飛びルールを使用',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Switch(
+                        value: useTobiRule,
+                        onChanged: (value) {
+                          setState(() {
+                            useTobiRule = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (useTobiRule) ...[
+                const SizedBox(height: 12),
+                _buildBonusInputField('飛びペナルティ', tobiPenaltyController),
+                const SizedBox(height: 12),
+                _buildBonusInputField('飛ばした人のボーナス', tobiRewardController),
+              ],
             ] else ...[
               Center(
                 child: Padding(
@@ -247,19 +296,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final bonus3 = int.tryParse(bonus3rdController.text) ?? -10;
     final bonus4 = int.tryParse(bonus4thController.text) ?? -30;
 
-    // バリデーション：着順ボーナスの合計が0か確認
-    final bonusTotal = bonus1 + bonus2 + bonus3 + bonus4;
-    if (bonusTotal != 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '着順ボーナスの合計が0になっていません\n現在の合計: ${bonusTotal}pt',
+    // バリデーション：ポイント制が有効な場合、着順ボーナスの合計が0か確認
+    if (usePointSystem) {
+      final bonusTotal = bonus1 + bonus2 + bonus3 + bonus4;
+      if (bonusTotal != 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '着順ボーナスの合計が0になっていません\n現在の合計: ${bonusTotal}pt',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      return;
+        );
+        return;
+      }
     }
 
     final newSettings = GameSettings(
@@ -271,6 +322,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       bonus3rd: bonus3,
       bonus4th: bonus4,
       usePointSystem: usePointSystem,
+      useTobiRule: useTobiRule,
+      tobiPenalty: int.tryParse(tobiPenaltyController.text) ?? -20,
+      tobiReward: int.tryParse(tobiRewardController.text) ?? 20,
     );
     Navigator.of(context).pop(newSettings);
   }
@@ -285,7 +339,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       bonus2ndController.text = defaults.bonus2nd.toString();
       bonus3rdController.text = defaults.bonus3rd.toString();
       bonus4thController.text = defaults.bonus4th.toString();
+      tobiPenaltyController.text = defaults.tobiPenalty.toString();
+      tobiRewardController.text = defaults.tobiReward.toString();
       usePointSystem = defaults.usePointSystem;
+      useTobiRule = defaults.useTobiRule;
     });
   }
 }

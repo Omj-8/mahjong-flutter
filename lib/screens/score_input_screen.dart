@@ -19,6 +19,7 @@ class ScoreInputScreen extends StatefulWidget {
 class _ScoreInputScreenState extends State<ScoreInputScreen> {
   late List<TextEditingController> scoreControllers;
   late List<String> playerNames;
+  String? _tobiKillerName;
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
       TextEditingController(),
       TextEditingController(),
     ];
+    _tobiKillerName = null;
   }
 
   @override
@@ -65,6 +67,10 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
             ),
             const SizedBox(height: 16),
             _buildTotalScoreDisplay(),
+            if (widget.gameSettings.useTobiRule) ...[
+              const SizedBox(height: 16),
+              _buildTobiSection(),
+            ],
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: _calculateResults,
@@ -188,6 +194,89 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
     );
   }
 
+  List<String> _getNegativePlayerNames() {
+    final negativeNames = <String>[];
+    for (int i = 0; i < scoreControllers.length; i++) {
+      final text = scoreControllers[i].text;
+      if (text.isEmpty || text == '-') continue;
+      final input = int.parse(text);
+      final score = input * 100;
+      if (score < 0) {
+        negativeNames.add(playerNames[i]);
+      }
+    }
+    return negativeNames;
+  }
+
+  Widget _buildTobiSection() {
+    final negativePlayers = _getNegativePlayerNames();
+
+    if (negativePlayers.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Text(
+          '飛びはありません',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    final availableKillers =
+      playerNames.where((name) => !negativePlayers.contains(name)).toList();
+    final dropdownItems = ['なし', ...availableKillers];
+    final currentValue = dropdownItems.contains(_tobiKillerName)
+      ? _tobiKillerName
+      : 'なし';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            '飛びルール',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '飛び対象: ${negativePlayers.join(' / ')}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: currentValue,
+            items: dropdownItems
+                .map(
+                  (name) => DropdownMenuItem(
+                    value: name,
+                    child: Text(name),
+                  ),
+                )
+                .toList(),
+            decoration: const InputDecoration(
+              labelText: '飛ばした人（任意）',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) {
+              setState(() {
+                _tobiKillerName = value == 'なし' ? null : value;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void _calculateResults() {
     // バリデーション1：全て入力されているか
     if (scoreControllers.any(
@@ -233,10 +322,20 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
       );
     }
 
+    // 飛びルール用の情報を整理
+    final negativePlayers = _getNegativePlayerNames();
+    final tobiKillerName = widget.gameSettings.useTobiRule &&
+        negativePlayers.isNotEmpty &&
+        _tobiKillerName != null &&
+        !negativePlayers.contains(_tobiKillerName)
+      ? _tobiKillerName
+      : null;
+
     // 計算を実行
     final result = CalculatorService.calculateGameResult(
       players,
       widget.gameSettings,
+      tobiKillerName: tobiKillerName,
     );
 
     // 結果画面へ遷移
@@ -254,6 +353,9 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
     for (var controller in scoreControllers) {
       controller.clear();
     }
+    setState(() {
+      _tobiKillerName = null;
+    });
   }
 }
 

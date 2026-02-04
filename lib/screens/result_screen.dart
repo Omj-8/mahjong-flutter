@@ -55,7 +55,7 @@ class ResultScreen extends StatelessWidget {
                       Icon(Icons.warning, color: Colors.orange),
                       SizedBox(width: 8),
                       Expanded(
-                        child: Text('合計が0になっていません。\n入力値を確認してください。'),
+                        child: Text('合計が想定値になっていません。\n入力値を確認してください。'),
                       ),
                     ],
                   ),
@@ -106,6 +106,17 @@ class ResultScreen extends StatelessWidget {
     return sortedPlayers.map((player) {
       final colors = [Colors.amber, Colors.grey, Colors.orange, Colors.brown];
       final color = colors[player.rank - 1];
+      final isTobiVictim = result.tobiVictims.contains(player.name);
+      final isTobiKiller = result.tobiKillerName == player.name;
+      int tobiAdjustment = 0;
+      if (result.tobiEnabled) {
+        if (isTobiVictim) {
+          tobiAdjustment += result.tobiPenalty;
+        }
+        if (isTobiKiller) {
+          tobiAdjustment += result.tobiReward * result.tobiVictims.length;
+        }
+      }
 
       return Card(
         margin: const EdgeInsets.only(bottom: 12),
@@ -113,31 +124,27 @@ class ResultScreen extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(left: BorderSide(color: color, width: 4)),
           ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '第${player.rank}位: ${player.name}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                  Text(
-                    player.finalScore.toString(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            title: Text(
+              '第${player.rank}位: ${player.name}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
-              const SizedBox(height: 12),
+            ),
+            subtitle: Text(
+              '合計: ${_formatPoints(player.totalPoints)} / 最終点数: ${player.finalScore}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: player.totalPoints >= 0
+                    ? Colors.green.shade700
+                    : Colors.red.shade700,
+              ),
+            ),
+            children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -165,6 +172,24 @@ class ResultScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              if (result.tobiEnabled && tobiAdjustment != 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('飛び調整:'),
+                      Text(
+                        _formatPoints(tobiAdjustment),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color:
+                              tobiAdjustment >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (player.rank == 1)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -176,7 +201,12 @@ class ResultScreen extends StatelessWidget {
                         style: TextStyle(color: Colors.blue),
                       ),
                       Text(
-                        _formatPoints(player.totalPoints - player.basePoints - player.bonusPoints),
+                        _formatPoints(
+                          player.totalPoints -
+                              player.basePoints -
+                              player.bonusPoints -
+                              tobiAdjustment,
+                        ),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.blue,
@@ -185,26 +215,6 @@ class ResultScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-              Divider(color: Colors.grey.shade300, height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '合計:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    _formatPoints(player.totalPoints),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: player.totalPoints >= 0
-                          ? Colors.green.shade700
-                          : Colors.red.shade700,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -277,6 +287,32 @@ class ResultScreen extends StatelessWidget {
               Text(_formatPoints(gameSettings.bonus4th)),
             ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('飛びルール'),
+              Text(gameSettings.useTobiRule ? '有効' : '無効'),
+            ],
+          ),
+          if (gameSettings.useTobiRule) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('飛びペナルティ'),
+                Text(_formatPoints(gameSettings.tobiPenalty)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('飛ばした人のボーナス'),
+                Text(_formatPoints(gameSettings.tobiReward)),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -322,6 +358,20 @@ class ResultScreen extends StatelessWidget {
       '4位: ${_formatPoints(gameSettings.bonus4th)}',
     );
 
+    if (gameSettings.useTobiRule) {
+      buffer.writeln('飛びルール: 有効');
+      buffer.writeln('飛びペナルティ: ${_formatPoints(gameSettings.tobiPenalty)}');
+      buffer.writeln('飛ばした人のボーナス: ${_formatPoints(gameSettings.tobiReward)}');
+      if (result.tobiVictims.isNotEmpty) {
+        buffer.writeln('飛び対象: ${result.tobiVictims.join(' / ')}');
+      }
+      buffer.writeln(
+        '飛ばした人: ${result.tobiKillerName ?? 'なし'}',
+      );
+    } else {
+      buffer.writeln('飛びルール: 無効');
+    }
+
     Clipboard.setData(ClipboardData(text: buffer.toString()));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -340,5 +390,9 @@ class ResultScreen extends StatelessWidget {
         backgroundColor: Colors.teal,
       ),
     );
+    // 2秒後にホームに戻る
+    await Future.delayed(const Duration(seconds: 2));
+    if (!context.mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }

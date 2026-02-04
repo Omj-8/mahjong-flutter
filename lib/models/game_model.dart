@@ -14,6 +14,11 @@ class GameSettings {
   // 計算方式の選択
   bool usePointSystem; // ポイント制を使用するか
 
+  // 飛びルール
+  late bool useTobiRule; // 飛びルールを使用するか
+  late int tobiPenalty; // 飛びペナルティ（負の値）
+  late int tobiReward; // 飛ばした人のボーナス（正の値）
+
   GameSettings({
     this.initialScore = 25000,
     this.returnPoints = 30000,
@@ -23,7 +28,14 @@ class GameSettings {
     this.bonus3rd = -10,
     this.bonus4th = -30,
     this.usePointSystem = true,
-  });
+    bool? useTobiRule,
+    int? tobiPenalty,
+    int? tobiReward,
+  }) {
+    this.useTobiRule = useTobiRule ?? false;
+    this.tobiPenalty = tobiPenalty ?? -20;
+    this.tobiReward = tobiReward ?? 20;
+  }
 
   /// デフォルト設定
   static GameSettings defaultSettings() {
@@ -36,6 +48,9 @@ class GameSettings {
       bonus3rd: -10,
       bonus4th: -30,
       usePointSystem: true,
+      useTobiRule: false,
+      tobiPenalty: -20,
+      tobiReward: 20,
     );
   }
 }
@@ -62,9 +77,19 @@ class Player {
 /// ゲーム結果の計算結果
 class GameResult {
   List<Player> players;
+  bool tobiEnabled;
+  List<String> tobiVictims;
+  String? tobiKillerName;
+  int tobiPenalty;
+  int tobiReward;
 
   GameResult({
     required this.players,
+    this.tobiEnabled = false,
+    this.tobiVictims = const [],
+    this.tobiKillerName,
+    this.tobiPenalty = 0,
+    this.tobiReward = 0,
   });
 }
 

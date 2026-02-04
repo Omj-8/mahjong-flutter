@@ -49,10 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
             colors: [Colors.blue.shade50, Colors.white],
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -219,6 +221,57 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildSettingItem('4位', gameSettings.bonus4th),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('飛びルール:', style: TextStyle(fontSize: 12)),
+                          Text(
+                            gameSettings.useTobiRule ? '有効' : '無効',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: gameSettings.useTobiRule
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (gameSettings.useTobiRule) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('飛びペナルティ:',
+                                style: TextStyle(fontSize: 12)),
+                            Text(
+                              '${gameSettings.tobiPenalty}pt',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('飛ばした人のボーナス:',
+                                style: TextStyle(fontSize: 12)),
+                            Text(
+                              '${gameSettings.tobiReward}pt',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ] else ...[
                       const Text(
                         'ポイント制: 無効',
@@ -233,7 +286,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               _buildCumulativeSummary(),
-            ],
+              ],
+            ),
           ),
         ),
       ),
