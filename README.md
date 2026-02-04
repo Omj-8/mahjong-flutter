@@ -283,7 +283,37 @@ UX/UI: 50%
 
 ---
 
-## 📝 ライセンス
+<<<<<<< HEAD
+## �️ 開発者向けセットアップ
+
+### 署名キーの設定（リリースビルド用）
+
+1. **テンプレートファイルをコピー**
+   ```bash
+   cp android/key.properties.template android/key.properties
+   ```
+
+2. **署名キーを作成**
+   ```bash
+   keytool -genkey -v -keystore ~/mahjong-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mahjong
+   ```
+
+3. **key.propertiesファイルを編集**
+   - `YOUR_STORE_PASSWORD_HERE` → 実際のストアパスワード
+   - `YOUR_KEY_PASSWORD_HERE` → 実際のキーパスワード
+   - `PATH_TO_YOUR_KEYSTORE_FILE` → .jksファイルの絶対パス
+
+4. **リリースビルド作成**
+   ```bash
+   flutter build appbundle --release
+   ```
+
+**⚠️ 注意**: `android/key.properties` と `*.jks` ファイルは絶対にGitHubにアップロードしないでください。
+
+---
+
+## �📝 ライセンス
+
 
 MIT License (プライベートプロジェクト)
 

@@ -1,0 +1,13 @@
+# 署名キー設定テンプレート
+# このファイルをコピーして android/key.properties として保存してください
+
+storePassword=YOUR_STORE_PASSWORD_HERE
+keyPassword=YOUR_KEY_PASSWORD_HERE
+keyAlias=mahjong
+storeFile=PATH_TO_YOUR_KEYSTORE_FILE
+
+# 使用方法:
+# 1. android/key.properties にこのファイルをコピー
+# 2. 上記の値を実際の署名キー情報に置換
+# 3. 署名キー(.jks/.keystore)ファイルを作成
+# 4. flutter build appbundle --release でリリースビルド
