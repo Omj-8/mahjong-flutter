@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/game_model.dart';
@@ -20,6 +22,7 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
   late List<TextEditingController> scoreControllers;
   late List<String> playerNames;
   String? _tobiKillerName;
+  int _rotationIndex = 0;
 
   @override
   void initState() {
@@ -60,11 +63,10 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
                 color: Colors.grey,
               ),
             ),
-            const SizedBox(height: 24),
-            ...List.generate(
-              4,
-              (index) => _buildPlayerInputField(playerNames[index], index),
-            ),
+            const SizedBox(height: 16),
+            _buildRotationControls(),
+            const SizedBox(height: 12),
+            _buildRotatableTable(),
             const SizedBox(height: 16),
             _buildTotalScoreDisplay(),
             if (widget.gameSettings.useTobiRule) ...[
@@ -98,30 +100,175 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
     );
   }
 
-  Widget _buildPlayerInputField(String playerName, int index) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextField(
-        controller: scoreControllers[index],
-        keyboardType: const TextInputType.numberWithOptions(signed: true),
-        inputFormatters: [
-          _MahjongScoreInputFormatter(),
-        ],
-        decoration: InputDecoration(
-          labelText: '$playerName (東南西北の$playerName)',
-          prefix: const Text(''),
-          suffixText: '00点',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          filled: true,
-          fillColor: Colors.blue.shade50,
-          hintText: '250 → 25000点 / -50 → -5000点',
-          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+  Widget _buildRotationControls() {
+    return Card(
+      elevation: 0,
+      color: Colors.blue.shade50,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.rotate_right, size: 18, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  '卓を回転して入力しやすい向きに合わせる',
+                  style: TextStyle(fontSize: 12, color: Colors.blue),
+                ),
+                const Spacer(),
+                Text(
+                  '${_rotationIndex * 90}°',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              children: List.generate(
+                4,
+                (index) => ChoiceChip(
+                  label: Text('${index * 90}°'),
+                  selected: _rotationIndex == index,
+                  onSelected: (_) {
+                    setState(() {
+                      _rotationIndex = index;
+                    });
+                  },
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _rotationIndex = (_rotationIndex + 3) % 4;
+                    });
+                  },
+                  icon: const Icon(Icons.rotate_left),
+                  label: const Text('90°左'),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _rotationIndex = (_rotationIndex + 1) % 4;
+                    });
+                  },
+                  icon: const Icon(Icons.rotate_right),
+                  label: const Text('90°右'),
+                ),
+              ],
+            ),
+          ],
         ),
-        onChanged: (_) {
-          setState(() {});
-        },
+      ),
+    );
+  }
+
+  Widget _buildRotatableTable() {
+    final tableRotation = _rotationIndex * (math.pi / 2);
+    final seatOrder = [
+      // 東の右が北、向かいが西、左が南
+      {'name': playerNames[0], 'index': 0, 'align': Alignment.topCenter},
+      {'name': playerNames[3], 'index': 3, 'align': Alignment.centerRight},
+      {'name': playerNames[2], 'index': 2, 'align': Alignment.bottomCenter},
+      {'name': playerNames[1], 'index': 1, 'align': Alignment.centerLeft},
+    ];
+
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green.shade200),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.casino, color: Colors.white, size: 36),
+              ),
+            ),
+            Transform.rotate(
+              angle: tableRotation,
+              child: Stack(
+                children: seatOrder
+                    .map(
+                      (seat) => Align(
+                        alignment: seat['align'] as Alignment,
+                        child: Transform.rotate(
+                          angle: -tableRotation,
+                          child: _buildSeatInputField(
+                            seat['name'] as String,
+                            seat['index'] as int,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeatInputField(String playerName, int index) {
+    return SizedBox(
+      width: 140,
+      child: Card(
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                playerName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: scoreControllers[index],
+                keyboardType: const TextInputType.numberWithOptions(signed: true),
+                inputFormatters: [
+                  _MahjongScoreInputFormatter(),
+                ],
+                decoration: InputDecoration(
+                  isDense: true,
+                  suffixText: '00点',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  filled: true,
+                  fillColor: Colors.blue.shade50,
+                  hintText: '250 / -50',
+                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                ),
+                onChanged: (_) {
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
