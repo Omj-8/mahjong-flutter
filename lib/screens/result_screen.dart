@@ -4,6 +4,12 @@ import '../models/game_model.dart';
 import '../services/calculator_service.dart';
 import '../services/history_service.dart';
 
+enum _RuleChangeAction {
+  addToExisting,
+  resetAndAdd,
+  cancel,
+}
+
 class ResultScreen extends StatelessWidget {
   final GameResult result;
   final GameSettings gameSettings;
@@ -382,7 +388,22 @@ class ResultScreen extends StatelessWidget {
   }
 
   Future<void> _addToHistory(BuildContext context) async {
-    await _historyService.addSession(result);
+    final currentSignature =
+        _historyService.buildSettingsSignature(gameSettings);
+    final storedSignature =
+        await _historyService.loadCumulativeSettingsSignature();
+
+    if (storedSignature != null && storedSignature != currentSignature) {
+      final action = await _confirmRuleChange(context);
+      if (action == null || action == _RuleChangeAction.cancel) {
+        return;
+      }
+      if (action == _RuleChangeAction.resetAndAdd) {
+        await _historyService.clearCumulativeOnly();
+      }
+    }
+
+    await _historyService.addSession(result, gameSettings);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -394,5 +415,35 @@ class ResultScreen extends StatelessWidget {
     await Future.delayed(const Duration(seconds: 2));
     if (!context.mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<_RuleChangeAction?> _confirmRuleChange(BuildContext context) {
+    return showDialog<_RuleChangeAction>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ルール変更があります'),
+        content: const Text(
+          '累計は別ルールで蓄積されています。\n'
+          'このまま加算しますか？それとも新しく始めますか？',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.of(context).pop(_RuleChangeAction.cancel),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.of(context).pop(_RuleChangeAction.addToExisting),
+            child: const Text('そのまま加算'),
+          ),
+          ElevatedButton(
+            onPressed: () =>
+                Navigator.of(context).pop(_RuleChangeAction.resetAndAdd),
+            child: const Text('新しく始める'),
+          ),
+        ],
+      ),
+    );
   }
 }

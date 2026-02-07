@@ -8,6 +8,7 @@ import '../models/history_model.dart';
 class HistoryService {
   static const _historyKey = 'session_history';
   static const _cumulativeKey = 'cumulative_totals';
+  static const _cumulativeSettingsKey = 'cumulative_settings_signature';
 
   Future<List<SessionEntry>> loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,7 +33,34 @@ class HistoryService {
     return decoded.map((key, value) => MapEntry(key, value as int));
   }
 
-  Future<void> addSession(GameResult result) async {
+  String buildSettingsSignature(GameSettings settings) {
+    final payload = {
+      'initialScore': settings.initialScore,
+      'returnPoints': settings.returnPoints,
+      'pointsPerThousand': settings.pointsPerThousand,
+      'bonus1st': settings.bonus1st,
+      'bonus2nd': settings.bonus2nd,
+      'bonus3rd': settings.bonus3rd,
+      'bonus4th': settings.bonus4th,
+      'usePointSystem': settings.usePointSystem,
+      'useTobiRule': settings.useTobiRule,
+      'tobiPenalty': settings.tobiPenalty,
+      'tobiReward': settings.tobiReward,
+    };
+    return jsonEncode(payload);
+  }
+
+  Future<String?> loadCumulativeSettingsSignature() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_cumulativeSettingsKey);
+  }
+
+  Future<void> saveCumulativeSettingsSignature(String signature) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_cumulativeSettingsKey, signature);
+  }
+
+  Future<void> addSession(GameResult result, GameSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
     final history = await loadHistory();
     final cumulative = await loadCumulative();
@@ -63,11 +91,19 @@ class HistoryService {
     );
 
     await prefs.setString(_cumulativeKey, jsonEncode(cumulative));
+    await saveCumulativeSettingsSignature(buildSettingsSignature(settings));
+  }
+
+  Future<void> clearCumulativeOnly() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cumulativeKey);
+    await prefs.remove(_cumulativeSettingsKey);
   }
 
   Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_historyKey);
     await prefs.remove(_cumulativeKey);
+    await prefs.remove(_cumulativeSettingsKey);
   }
 }
