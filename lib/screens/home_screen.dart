@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   );
+                  await _loadCumulative();
                 },
                 icon: const Icon(Icons.edit),
                 label: const Text('点数を入力'),
